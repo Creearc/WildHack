@@ -131,10 +131,10 @@ dataset_base = Config({
 #--------------------------------------------------------------------------------------
 cig_butts_dataset = dataset_base.copy({
   'name': 'Immersive Limit - Cigarette Butts',
-  'train_info': 'D:/hackathon/WildHack/yolact/examples_data/cig_butts/cig_butts/train/coco_annotations.json',
-  'train_images': 'D:/hackathon/WildHack/yolact/examples_data/cig_butts/cig_butts/train/images/',
-  'valid_info': 'D:/hackathon/WildHack/yolact/examples_data/cig_butts/cig_butts/val/coco_annotations.json',
-  'valid_images': 'D:/hackathon/WildHack/yolact/examples_data/cig_butts/cig_butts/val/images/',
+  'train_info': 'data/cig_butts/cig_butts/train/coco_annotations.json',
+  'train_images': 'data/cig_butts/cig_butts/train/images/',
+  'valid_info': 'data/cig_butts/cig_butts/val/coco_annotations.json',
+  'valid_images': 'data/cig_butts/cig_butts/val/images/',
   'class_names': ('cig_butt'),
   'label_map': { 1:  1 }
 })
@@ -788,8 +788,8 @@ yolact_resnet50_cig_butts_config = yolact_resnet50_config.copy({
     'num_classes': len(cig_butts_dataset.class_names) + 1,
 
     # Image Size
-    'max_size': 128,
-    #'max_size': 512,
+    #'max_size': 128,
+    'max_size': 512,
 })
 #-------------------------------------------------------------------------
 
