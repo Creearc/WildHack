@@ -134,7 +134,7 @@ def gen(out_img_count=10,
             final_mask = combine_imgs(bimg, wimg, mask, o_x, o_y)
             
             cl = p.split('/')[-1].split("_")[0]
-            cv2.imwrite( '{}\\{}_{}_{}.{}'.format(save_mask_dir, counter, cl, i, ext_mask), final_mask)
+            cv2.imwrite( '{}{}_{}_{}.{}'.format(save_mask_dir, counter, cl, i, ext_mask), final_mask)
         
 
         o_h, o_w = o_img.shape[:2]
