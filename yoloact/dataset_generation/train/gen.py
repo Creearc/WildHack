@@ -153,7 +153,7 @@ def gen(out_img_count=10,
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-        cv2.imwrite( '{}\\{}.{}'.format(save_dir, str(counter), ext), out)
+        cv2.imwrite( '{}{}.{}'.format(save_dir, str(counter), ext), out)
         print(counter)
         counter += 1
 
