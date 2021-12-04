@@ -9,7 +9,7 @@ from PIL import Image
 import numpy as np
 from pycococreatortools import pycococreatortools
 
-ROOT_DIR = 'train/output'
+ROOT_DIR = "/home/alexandr/wildhack/WildHack/train/output"
 IMAGE_DIR = os.path.join(ROOT_DIR, "waste_train2021")
 ANNOTATION_DIR = os.path.join(ROOT_DIR, "annotations")
 
@@ -84,8 +84,9 @@ def main():
         "annotations": []
     }
 
-    image_id = 1
-    segmentation_id = 1
+    image_id = 0
+    segmentation_id = 0
+    i = 0
     
     # filter for jpeg images
     for root, _, files in os.walk(IMAGE_DIR):
@@ -101,11 +102,12 @@ def main():
             # filter for associated png annotations
             for root, _, files in os.walk(ANNOTATION_DIR):
                 annotation_files = filter_for_annotations(root, files, image_filename)
+                print(annotation_files)
 
                 # go through each associated annotation
                 for annotation_filename in annotation_files:
                     
-                    print(annotation_filename)
+                    print(str(i), annotation_filename)
                     class_id = [x['id'] for x in CATEGORIES if x['name'] in annotation_filename][0]
 
                     category_info = {'id': class_id, 'is_crowd': 'crowd' in image_filename}
@@ -120,6 +122,7 @@ def main():
                         coco_output["annotations"].append(annotation_info)
 
                     segmentation_id = segmentation_id + 1
+                    i += 1
 
             image_id = image_id + 1
 

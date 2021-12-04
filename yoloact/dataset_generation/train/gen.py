@@ -63,12 +63,12 @@ def combine_imgs(img1, img2, mask, x, y):
 
 
 def gen(out_img_count=10,
-        img_dir = 'objects/',
-        save_mask_dir = 'output/annotations/',
-        save_dir = 'output/waste_train2021/'):
+        img_dir = '/home/alexandr/wildhack/WildHack/yoloact/dataset_generation/train/objects/',
+        save_mask_dir = '/home/alexandr/wildhack/WildHack/yoloact/dataset_generation/train/output/annotations/',
+        save_dir = '/home/alexandr/wildhack/WildHack/yoloact/dataset_generation/train/output/waste_train2021/'):
     font = cv2.FONT_HERSHEY_SIMPLEX
-    counter = 0
-    backgrounds_dir = 'backgrounds/'
+    counter = 10000000
+    backgrounds_dir = '/home/alexandr/wildhack/WildHack/yoloact/dataset_generation/train/backgrounds/'
     ext = 'jpg'
     ext_mask = 'png'
 
@@ -81,7 +81,7 @@ def gen(out_img_count=10,
 
     # object
     o_gamma = (0.9, 1.0)
-    o_scale = (0.9, 1.1)
+    o_scale = (0.9, 1.3)
     o_pos_x = (250, b_mega_size[0]-250)
     o_pos_y = (250, b_mega_size[1]-250)
     #o_pos_x = (150, 150)
@@ -106,7 +106,7 @@ def gen(out_img_count=10,
         #'''
 
         # object
-        obj_num = random_obj_num(5)
+        obj_num = random_obj_num(4)
         for i in range(obj_num):
             o_img , p = random_img(img_dir)
             o_img  = random_size(o_img , o_scale[0], o_scale[1])
