@@ -129,13 +129,13 @@ dataset_base = Config({
 })
 
 #--------------------------------------------------------------------------------------
-cig_butts_dataset = dataset_base.copy({
-  'name': 'Immersive Limit - Cigarette Butts',
-  'train_info': '/home/alexandr/wildhack/WildHack/yoloact/data/cig_butts/train/coco_annotations.json',
-  'train_images': '/home/alexandr/wildhack/WildHack/yoloact/data/cig_butts/train/images/',
-  'valid_info': '/home/alexandr/wildhack/WildHack/yoloact/data/cig_butts/val/coco_annotations.json',
-  'valid_images': '/home/alexandr/wildhack/WildHack/yoloact/data/cig_butts/val/images/',
-  'class_names': ('cig_butt'),
+w_dataset = dataset_base.copy({
+  'name': 'WildHack Waste Dataset',
+  'train_info': '/home/alexandr/wildhack/WildHack/yoloact/data/waste/train/coco_annotations.json',
+  'train_images': '/home/alexandr/wildhack/WildHack/yoloact/data/waste/train/images/',
+  'valid_info': '/home/alexandr/wildhack/WildHack/yoloact/data/waste/val/coco_annotations.json',
+  'valid_images': '/home/alexandr/wildhack/WildHack/yoloact/data/waste/val/images/',
+  'class_names': ('wood','metal','plastic','net'),
   'label_map': { 1:  1 }
 })
 #--------------------------------------------------------------------------------------
@@ -781,14 +781,13 @@ yolact_resnet50_pascal_config = yolact_resnet50_config.copy({
 
 
 #-------------------------------------------------------------------------
-yolact_resnet50_cig_butts_config = yolact_resnet50_config.copy({
-    'name': 'yolact_resnet50_cig_butts',
+yolact_resnet50_wildhack_waste_config = yolact_resnet50_config.copy({
+    'name': 'yolact_resnet50_wildhack_waste',
     # Dataset stuff
-    'dataset': cig_butts_dataset,
-    'num_classes': len(cig_butts_dataset.class_names) + 1,
+    'dataset': w_dataset,
+    'num_classes': len(w_dataset.class_names) + 1,
 
     # Image Size
-    #'max_size': 128,
     'max_size': 512,
 })
 #-------------------------------------------------------------------------
