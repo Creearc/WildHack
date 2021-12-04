@@ -81,7 +81,7 @@ def gen(out_img_count=10,
 
     # object
     o_gamma = (0.9, 1.0)
-    o_scale = (0.9, 1.3)
+    o_scale = (1.1, 1.4)
     o_pos_x = (250, b_mega_size[0]-250)
     o_pos_y = (250, b_mega_size[1]-250)
     #o_pos_x = (150, 150)
