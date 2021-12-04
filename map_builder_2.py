@@ -55,9 +55,12 @@ def compute_kps_and_features(img):
 
   return img_kps, img_features
 
-def combine_arr(base, img, coords):
-  if coords is None:
-    coords = (0, orig.shape[1], 0, orig.shape[0])
+
+def combine_arr(arr1, arr2):
+  [img_kps, img_features, img] = arr2
+  base = arr1[2]
+  
+  coords = (0, arr1[2].shape[0], 0, arr1[2].shape[1])
   
   result = np.zeros((base.shape[0] + img.shape[0] * 2,
                      base.shape[1] + img.shape[1] * 2, 3),
@@ -67,13 +70,14 @@ def combine_arr(base, img, coords):
                      (coords[3] - coords[2]) * 2, 3),
                     np.uint8)
 
-  orig = base[coords[0] : coords[1], coords[2] : coords[3]].copy()
-  width = orig.shape[1] + img.shape[1]
-  height = orig.shape[0] + img.shape[0]
-
+  
   part = base[coords[0] : coords[1],
               coords[2] : coords[3]].copy()
-
+  
+  width = part.shape[1] + img.shape[1]
+  height = part.shape[0] + img.shape[0]
+  
+  print('Bse -> ', base.shape[:2])
   print('Part -> ', part.shape[:2])
   print('Coords -> ', coords[1] - coords[0], coords[3] - coords[2], coords)
 
@@ -88,7 +92,7 @@ def combine_arr(base, img, coords):
   
   orig_kps, orig_features = compute_kps_and_features(orig)
   
-  matches = matchKeyPointsKNN(img_features, orig_features, ratio=0.95)
+  matches = matchKeyPointsKNN(img_features, orig_features, ratio=0.85)
   print('Matches -> ', len(matches))
   if len(matches) < 10:
     print('Low count of matches')
@@ -120,7 +124,7 @@ def combine_arr(base, img, coords):
   result[img_coords[0] : img_coords[1],
          img_coords[2] : img_coords[3]] = np.where(tmp_0 == 0, tmp, tmp_0)
   
-  if True:
+  if not True:
     cv2.rectangle(tmp, (x1, y1),(x1+w1, y1+h1), (0,255,0), 10)
     tmp = resize(tmp, h=1080)
 
@@ -143,8 +147,7 @@ def combine_arr(base, img, coords):
   dy, dx = img_coords[0] + y1 - y, img_coords[2] + x1 - x
 
   k = 0
-  return result, (dy + int(h1 * k), dy + h1 - int(h1 * k),
-                  dx + int(w1 * k), dx + w1 - int(w1 * k))
+  return result
 
 
 
@@ -160,46 +163,63 @@ for f in os.listdir(path):
   img = cv2.imread('{}/{}'.format(path, f))
   #img = resize(img, h=720)
   img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-  kps, features = cv2.ORB_create().detectAndCompute(img_gray, None)
-  kps = np.float32([kp.pt for kp in kps])
-
-  if old_img is None:
-    old_img = img.copy()
-    result = img.copy()
-    coords = (0, img.shape[0], 0, img.shape[1])
-    continue
-
   img_kps, img_features = compute_kps_and_features(img)
-  
-  mx = 0
-  c = (0, img.shape[0], 0, img.shape[1])
-  for element in arr:
-    similarity = match_check(element[1], img_features)
-    print(similarity)
-    if mx == 0 or similarity > mx:
-      mx = similarity
-      c = element[3]     
-  
-  result, coords = combine_arr(result, img, c)
-  print(result.shape)
-  print(coords)
 
-  arr.append((img_kps, img_features, img, coords))
-
-  if len(arr) > 5:
-    arr.pop(0)
-
-  old_img = img.copy()
-  
-  out = result.copy()
-  cv2.rectangle(out, (coords[2], coords[0]),(coords[3], coords[1]), (0,255,0), 10)
-  
-  out = resize(out, h=1080)
-  cv2.imshow('', out)
-  key = cv2.waitKey(1)
-  if key != 32 and key != -1:
+  arr.append((img_kps, img_features, img))
+  if len(arr) == 20:
     break
+
+epoch =0
+while len(arr) > 1:
+  print('----> EPOCH ', epoch,' <----')
+  skip_arr = []
+  out = []
+  for i in range(len(arr)):
+    mx = 0
+    ind = 0
+    if i in skip_arr:
+      continue
+    
+    for j in range(len(arr)):
+      if i == j or j in skip_arr:
+        continue
+
+      similarity = match_check(arr[i][1], arr[j][1])
+      if mx == 0 or similarity > mx:
+        mx = similarity
+        ind = j
+
+    skip_arr.append(ind)
+    img = combine_arr(arr[i], arr[ind])
+    img_kps, img_features = compute_kps_and_features(img)
+    out.append((img_kps, img_features, img))
+  arr = out.copy()
+  epoch += 1
+      
+
+out = resize(arr[0][2], h=1080)
+cv2.imshow('', out)
+cv2.waitKey(0)
   
 cv2.destroyAllWindows()  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

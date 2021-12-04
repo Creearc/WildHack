@@ -96,6 +96,8 @@ def combine_arr(base, img, coords):
   M = getHomography(img_kps, orig_kps, img_features, orig_features, matches, reprojThresh=4)
   (H, status) = M
 
+  print('H -> ', H)
+
   tmp = cv2.warpPerspective(img, H, (width, height))
   gray = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
   mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY)[1]
@@ -121,7 +123,21 @@ def combine_arr(base, img, coords):
          img_coords[2] : img_coords[3]] = np.where(tmp_0 == 0, tmp, tmp_0)
   
   if True:
-    cv2.rectangle(tmp, (x1, y1),(x1+w1, y1+h1), (0,255,0), 10)
+    #cv2.rectangle(tmp, (x1, y1),(x1+w1, y1+h1), (0,255,0), 10)
+##    edges = cv2.Canny(mask, 100, 150, apertureSize = 3)
+##    cv2.imshow('edges', resize(edges, h=1080))
+##    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 1, np.array([]),
+##                          100, 50)
+##    if not(lines is None):
+##      for line in lines:
+##        [[x1, y1, x2, y2]] = line
+##        cv2.line(tmp,(x1, y1), (x2, y2), 50, 20)
+    gray = np.float32(mask)
+    dst = cv2.cornerHarris(gray,2,3,0.04)
+    tmp[dst>0.01*dst.max()]=[0,0,255]
+    
+    cv2.imshow('edges', resize(dst, h=1080))   
+    
     tmp = resize(tmp, h=1080)
 
     cv2.imshow('', tmp)
@@ -197,7 +213,7 @@ for f in os.listdir(path):
   
   out = resize(out, h=1080)
   cv2.imshow('', out)
-  key = cv2.waitKey(1)
+  key = cv2.waitKey(0)
   if key != 32 and key != -1:
     break
   
