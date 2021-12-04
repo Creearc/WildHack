@@ -136,7 +136,7 @@ w_dataset = dataset_base.copy({
   'valid_info': '/home/alexandr/wildhack/WildHack/yoloact/data/waste/val/coco_annotations.json',
   'valid_images': '/home/alexandr/wildhack/WildHack/yoloact/data/waste/val/images/',
   'class_names': ('wood','metal','plastic','net'),
-  'label_map': { 1:  1 }
+  'label_map': { 1:  1, 2:  2, 3:  3, 4:  4}
 })
 #--------------------------------------------------------------------------------------
 
