@@ -160,7 +160,7 @@ def gen(out_img_count=10,
 
 
 
-out_img_count = 25
+out_img_count = 500
 t = time.time()
 gen(out_img_count = out_img_count)
 print((time.time() - t) / out_img_count)
