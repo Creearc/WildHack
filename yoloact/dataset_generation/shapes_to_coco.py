@@ -9,7 +9,7 @@ from PIL import Image
 import numpy as np
 from pycococreatortools import pycococreatortools
 
-ROOT_DIR = "/home/alexandr/wildhack/WildHack/yoloact/dataset_generation/train/output/"
+ROOT_DIR = "/home/alexandr/wildhack/WildHack/yoloact/dataset_generation/train/output"
 IMAGE_DIR = os.path.join(ROOT_DIR, "waste_train2021")
 ANNOTATION_DIR = os.path.join(ROOT_DIR, "annotations")
 
