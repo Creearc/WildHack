@@ -33,6 +33,10 @@ def build_map():
   return result
 
 path = 'dataset/p2'
+
+ptd = 1
+
+dd = 10 ** 5
   
 arr = []
 coords = None
@@ -48,6 +52,11 @@ for f in os.listdir(path):
               dms_coordinates_to_dd_coordinates(image.gps_longitude, image.gps_longitude_ref))
 
     print(coords[0], coords[1])
+
+    arr.append((img, coords))
+
+    if len(arr) > 1:
+      print(arr[-1][1][0] - arr[-2][1][0])
 
   
 
