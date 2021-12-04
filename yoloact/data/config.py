@@ -131,10 +131,10 @@ dataset_base = Config({
 #--------------------------------------------------------------------------------------
 cig_butts_dataset = dataset_base.copy({
   'name': 'Immersive Limit - Cigarette Butts',
-  'train_info': 'data/cig_butts/cig_butts/train/coco_annotations.json',
-  'train_images': 'data/cig_butts/cig_butts/train/images/',
-  'valid_info': 'data/cig_butts/cig_butts/val/coco_annotations.json',
-  'valid_images': 'data/cig_butts/cig_butts/val/images/',
+  'train_info': './data/cig_butts/cig_butts/train/coco_annotations.json',
+  'train_images': './data/cig_butts/cig_butts/train/images/',
+  'valid_info': './data/cig_butts/cig_butts/val/coco_annotations.json',
+  'valid_images': './data/cig_butts/cig_butts/val/images/',
   'class_names': ('cig_butt'),
   'label_map': { 1:  1 }
 })
@@ -782,7 +782,7 @@ yolact_resnet50_pascal_config = yolact_resnet50_config.copy({
 
 #-------------------------------------------------------------------------
 yolact_resnet50_cig_butts_config = yolact_resnet50_config.copy({
-    'name': 'yolact_plus_resnet50_cig_butts',
+    'name': 'yolact_resnet50_cig_butts',
     # Dataset stuff
     'dataset': cig_butts_dataset,
     'num_classes': len(cig_butts_dataset.class_names) + 1,
