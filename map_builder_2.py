@@ -39,7 +39,7 @@ def getHomography(kpsA, kpsB, featuresA, featuresB, matches, reprojThresh):
 
     return (H, status)
 
-def match_check(featuresA, featuresB, ratio=0.75):
+def match_check(featuresA, featuresB, ratio=0.85):
   rawMatches = bf.knnMatch(featuresA, featuresB, 2)
   matches = 0
 
@@ -150,6 +150,23 @@ def combine_arr(arr1, arr2):
   return result
 
 
+def build_arr(arr):
+  for f in os.listdir(path):
+    print('{}/{}'.format(path, f))
+    img_full = cv2.imread('{}/{}'.format(path, f))
+    #img = resize(img, h=720)
+    for i in range(0, img_full.shape[0] - part_scale, step):
+      for j in range(0, img_full.shape[1] - part_scale, step):
+        img = img_full[i : i + part_scale,
+                       j : j + part_scale].copy()
+        
+        img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        img_kps, img_features = compute_kps_and_features(img)
+
+        arr.append((img_kps, img_features, img))
+        if len(arr) >= 2000:
+          return arr
+  return arr
 
 path = 'dataset/p2'
   
@@ -158,20 +175,15 @@ coords = None
 old_img = None
 result = None
 
-for f in os.listdir(path):
-  print('{}/{}'.format(path, f))
-  img = cv2.imread('{}/{}'.format(path, f))
-  #img = resize(img, h=720)
-  img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-  img_kps, img_features = compute_kps_and_features(img)
+part_scale = 1024 * 2
+step = 512
 
-  arr.append((img_kps, img_features, img))
-  if len(arr) == 20:
-    break
+arr = build_arr(arr)
 
-epoch =0
+epoch = 0
 while len(arr) > 1:
   print('----> EPOCH ', epoch,' <----')
+  print('----> imgs left ', len(arr),' <----')
   skip_arr = []
   out = []
   for i in range(len(arr)):
@@ -188,11 +200,13 @@ while len(arr) > 1:
       if mx == 0 or similarity > mx:
         mx = similarity
         ind = j
-
-    skip_arr.append(ind)
-    img = combine_arr(arr[i], arr[ind])
-    img_kps, img_features = compute_kps_and_features(img)
-    out.append((img_kps, img_features, img))
+    if similarity < 60:
+      skip_arr.append(i)
+    else:
+      skip_arr.append(ind)
+      img = combine_arr(arr[i], arr[ind])
+      img_kps, img_features = compute_kps_and_features(img)
+      out.append((img_kps, img_features, img))
   arr = out.copy()
   epoch += 1
       
@@ -205,8 +219,11 @@ cv2.destroyAllWindows()
 
 
 
+out = np.zeros(512 * math.ceil(frame.shape[0] / 512),
+               512 * math.ceil(frame.shape[1] / 512),
+               np.uint8)  
 
-
+out[:frame.shape[0], :frame.shape[1]] = frame
 
 
 
