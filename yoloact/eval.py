@@ -25,6 +25,7 @@ from collections import defaultdict
 from pathlib import Path
 from collections import OrderedDict
 from PIL import Image
+import math
 
 import matplotlib.pyplot as plt
 import cv2
@@ -186,16 +187,35 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
     # First, draw the masks on the GPU where we can do it really fast
     # Beware: very fast but possibly unintelligible mask-drawing code ahead
     # I wish I had access to OpenGL or Vulkan but alas, I guess Pytorch tensor operations will have to suffice
+    predicted_masks = [np.zeros((512,512,1), np.uint8) for i in range(4)]
     if args.display_masks and cfg.eval_mask_branch and num_dets_to_consider > 0:
         # After this, mask is of size [num_dets, h, w, 1]
         masks = masks[:num_dets_to_consider, :, :, None]
-        
+
+        # ----------------------------------------------------------------------------------------------------------------------------------------
+        p = masks.cpu().detach().numpy()
+        #print(classes)
+        #print("")
+
+
+        for i, c in enumerate(classes):
+            #print(predicted_masks[c].shape, p[i].shape)
+            predicted_masks[c] = np.where(predicted_masks[c] == 0, p[i], predicted_masks[c])
+        #print("")
+
+        #for ii in range(4):
+        #    cv2.imshow(str(ii), predicted_masks[ii])
+        #cv2.waitKey(0)
+
         # Prepare the RGB images for each mask given their color (size [num_dets, h, w, 1])
         colors = torch.cat([get_color(j, on_gpu=img_gpu.device.index).view(1, 1, 1, 3) for j in range(num_dets_to_consider)], dim=0)
         masks_color = masks.repeat(1, 1, 1, 3) * colors * mask_alpha
+        #print(colors)
+        #print("")
 
         # This is 1 everywhere except for 1-mask_alpha where the mask is
         inv_alph_masks = masks * (-mask_alpha) + 1
+
         
         # I did the math for this on pen and paper. This whole block should be equivalent to:
         #    for j in range(num_dets_to_consider):
@@ -231,7 +251,9 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
         cv2.putText(img_numpy, fps_str, text_pt, font_face, font_scale, text_color, font_thickness, cv2.LINE_AA)
     
     if num_dets_to_consider == 0:
-        return img_numpy
+        return img_numpy, predicted_masks
+
+
 
     if args.display_text or args.display_bboxes:
         for j in reversed(range(num_dets_to_consider)):
@@ -259,7 +281,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
                 cv2.putText(img_numpy, text_str, text_pt, font_face, font_scale, text_color, font_thickness, cv2.LINE_AA)
             
     
-    return img_numpy
+    return img_numpy,predicted_masks
 
 def prep_benchmark(dets_out, h, w):
     with timer.env('Postprocess'):
@@ -369,8 +391,6 @@ class Detections:
 
         with open(os.path.join(args.web_det_path, '%s.json' % cfg.name), 'w') as f:
             json.dump(output, f)
-        
-
         
 
 def _mask_iou(mask1, mask2, iscrowd=False):
@@ -592,13 +612,105 @@ def badhash(x):
     x =  ((x >> 16) ^ x) & 0xFFFFFFFF
     return x
 
-def evalimage(net:Yolact, path:str, save_path:str=None):
-    frame = torch.from_numpy(cv2.imread(path)).cuda().float()
-    batch = FastBaseTransform()(frame.unsqueeze(0))
-    preds = net(batch)
+def resize(img, w=None, h=None):
+    sh, sw = img.shape[:2]
+    if not (w is None):
+        k = sw / w
+    elif not (h is None):
+        k = sh / h
+    w, h = int(sw // k), int(sh // k)
+    return cv2.resize(img, (w, h))
 
-    img_numpy = prep_display(preds, frame, None, None, undo_transform=False)
+def rle(inarray):
+    """ run length encoding. Partial credit to R rle function. 
+        Multi datatype arrays catered for including non Numpy
+        returns: tuple (runlengths, startpositions, values) """
+    ia = np.asarray(inarray)                # force numpy
+    n = len(ia)
+    if n == 0: 
+        return (None, None, None)
+    else:
+        y = ia[1:] != ia[:-1]               # pairwise unequal (string safe)
+        i = np.append(np.where(y), n - 1)   # must include last element posi
+        z = np.diff(np.append(-1, i))       # run lengths
+        p = np.cumsum(np.append(0, z))[:-1] # positions
+        return(z, p, ia[i])
+
+def rlencode_mask(mask):
+    l,s,v = rle(mask.flatten()) # length, starts, values
+    l,s = l[v], s[v]
+    encoded = ' '.join([' '.join(map(str, e)) for e in zip(s, l)])
+    if not encoded:
+        encoded = '0 0'
+    return encoded
+
+custom_count = 0
+lines = ['Type_Id,Mask\n']
+
+def evalimage(net:Yolact, path:str, save_path:str=None):
+    global custom_count, lines
+    print(path)
+    frame = cv2.imread(path)
+
+    out = np.zeros((512 * math.ceil(frame.shape[0] / 512),
+                    512 * math.ceil(frame.shape[1] / 512),
+                    3),
+                    np.uint8)
+
+    out[:frame.shape[0], :frame.shape[1]] = frame
+
+    pr_masks = [np.zeros((out.shape[0], out.shape[1],1), np.uint8) for i in range(4)]
+    part_scale = 512
+    step = 256
+
+    for i in range(0, out.shape[0] - part_scale, step):
+        for j in range(0, out.shape[1] - part_scale, step):
+            img = out[i : i + part_scale,
+                      j : j + part_scale].copy()
+
+            image = torch.from_numpy(img).cuda().float()
+            batch = FastBaseTransform()(image.unsqueeze(0))
+            preds = net(batch)
     
+            img_numpy, pred_masks = prep_display(preds, image, None, None, undo_transform=False)
+            #print(save_path.split('.')[0] + str(time.time()) + '.'  + save_path.split('.')[1])
+            #cv2.imwrite(save_path.split('.')[0] + str(time.time()) + '.' + save_path.split('.')[1], img_numpy)
+            for k in range(4):
+                part = pr_masks[k][i : i + part_scale,
+                                   j : j + part_scale]
+                pr_masks[k][i : i + part_scale,
+                            j : j + part_scale] = np.where(part == 0, pred_masks[k], part)
+                #cv2.imshow(str(k), pred_masks[k])
+                #print(k, pr_masks[k].any()!=0)
+                #cv2.imshow(str(k), resize(pr_masks[k], h=720))
+            #cv2.waitKey(0)
+
+    for k in range(4):
+        pr_masks[k] = pr_masks[k][ : frame.shape[0], : frame.shape[1]]
+
+        if k == 2:
+            class_id = 3
+        elif k == 3:
+            class_id = 2
+        else:
+            class_id = k
+
+        classnames = ['wood','metall','net','plastic']
+
+        pr_masks[k] = cv2.threshold(pr_masks[k], 0, 255, cv2.THRESH_BINARY)[1]
+
+        if class_id == 2:
+            encoded = f'{classnames[class_id]}_{custom_count},' + '0 0' + f'\n'#class_id) + f'\n'
+        else:
+            encoded = f'{classnames[class_id]}_{custom_count},' + rlencode_mask(pr_masks[k] != 0) + f'\n'#class_id) + f'\n'
+        lines.append(encoded)
+
+        cv2.imwrite(save_path.split('.')[0] + '_mask_' + str(class_id) + '.' + save_path.split('.')[1], 
+                    pr_masks[k]) #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+        #cv2.imshow(str(k), resize(pr_masks[k], h=720))
+    #cv2.waitKey(0)
+    custom_count += 1
+
     if save_path is None:
         img_numpy = img_numpy[:, :, (2, 1, 0)]
 
@@ -606,8 +718,8 @@ def evalimage(net:Yolact, path:str, save_path:str=None):
         plt.imshow(img_numpy)
         plt.title(path)
         plt.show()
-    else:
-        cv2.imwrite(save_path, img_numpy)
+    #else:
+        #cv2.imwrite(save_path, img_numpy)
 
 def evalimages(net:Yolact, input_folder:str, output_folder:str):
     if not os.path.exists(output_folder):
@@ -949,7 +1061,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
                 preds = net(batch)
             # Perform the meat of the operation here depending on our mode.
             if args.display:
-                img_numpy = prep_display(preds, img, h, w)
+                img_numpy, pred_masks = prep_display(preds, img, h, w)
             elif args.benchmark:
                 prep_benchmark(preds, h, w)
             else:
@@ -1103,5 +1215,5 @@ if __name__ == '__main__':
             net = net.cuda()
 
         evaluate(net, dataset)
-
-
+        with open('baseline_solution.csv', 'w') as f:
+            f.writelines(lines)

@@ -17,7 +17,7 @@ print(ftp.login(user='alexandr', passwd='9'))
 ftp.cwd('/home/alexandr/wildhack/WildHack/yoloact/weights')
 #ftp.cwd('out_stepa_videos')
 
-for i in ['yolact_resnet50_wildhack_waste_123_35100.pth']:
+for i in ['yolact_resnet50_wildhack_waste_339_96700.pth']:
 #if True:
   #fl = 'test_9.wav'
   fl = i
