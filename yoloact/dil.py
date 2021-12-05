@@ -41,18 +41,20 @@ lines = ['Type_Id,Mask\n']
 classes = ['wood', 'metall', 'net', 'plastic']
 kernel = np.ones((5,5),np.uint8)
 
-for i in range(21):
+for i in range(21,32):
+    #f = f'odm_orthophoto (1).png'
     f = f'{i:02}_image.JPG'
-    pic = cv2.imread('D:/hackathon/WildHack/test_dataset/example/{}'.format(f), cv2.IMREAD_UNCHANGED)
+    pic = cv2.imread('D:/hackathon/WildHack/test_dataset/pr/{}'.format(f), cv2.IMREAD_UNCHANGED)
     if pic is None:
         break
     else:
         out = pic.copy()
     for j in range(4):
         classname = classes[j]
+        #f = f'odm_orthophoto (1)_mask_{j}.png'
         f = f'{i:02}_image_mask_{j}.png'
         print(f)
-        predicted_mask = cv2.imread('output_image_8800_05/{}'.format(f), cv2.IMREAD_UNCHANGED)
+        predicted_mask = cv2.imread('pr1/{}'.format(f), cv2.IMREAD_UNCHANGED)
         
         if predicted_mask is None:
             encoded = f'{classname}_{i},' + '0 0' + f'\n'
@@ -82,5 +84,5 @@ for i in range(21):
     #cv2.imshow(f'im_{i}', resize(out, h=720))
     cv2.imwrite(f'masked_output_images/out_{i}.png', out)
     #cv2.waitKey(0)
-with open('nikita_solution_fresh_new.csv', 'w') as f:
+with open('nikita_solution_fresh_new_privat.csv', 'w') as f:
     f.writelines(lines)
