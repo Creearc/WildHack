@@ -14,10 +14,10 @@ ftp.connect(HOST, PORT)
 print(ftp.login(user='alexandr', passwd='9'))
 #print(ftp.login(user='pi', passwd='robo9'))
 
-ftp.cwd('/home/alexandr/wildhack/WildHack/yoloact/dataset_generation/train/output')
+ftp.cwd('/home/alexandr/wildhack/WildHack/yoloact/weights')
 #ftp.cwd('out_stepa_videos')
 
-for i in ['p.zip']:
+for i in ['yolact_resnet50_wildhack_waste_123_35100.pth']:
 #if True:
   #fl = 'test_9.wav'
   fl = i
@@ -25,4 +25,3 @@ for i in ['p.zip']:
 
   with open(out, 'wb') as f:
       ftp.retrbinary('RETR ' + fl, f.write)
-
