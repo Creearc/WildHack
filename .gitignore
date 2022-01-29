@@ -1,3 +1,6 @@
 result*
 *.JPG
 *.zip
+yoloact/remote_output/yolact_resnet50_wildhack_waste_11_3300.pth
+*.py
+yoloact/remote_output/get.py
